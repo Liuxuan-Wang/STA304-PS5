@@ -1,0 +1,44 @@
+---
+title: "What types of video games tend to have more sales"
+subtitle: ""
+author: "Liuxuan Wang"
+thanks: ""
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: |
+  | Video game, as an entertainment full of excitement and positive emotion, has attracted nearly 40% of the world population to be video game players. Obtained video game sales data from Kaggle with over 16,000 video games, this paper conducts multiple linear regression models to see how factors such as rating, number of years since publish, platform and type of game affect the video game sales. From this study, video game producers can have a better sense on what kind of games tend to have a better sale and can predict a certain video game's sale in the future.
+  |
+  | **Keywords:** video games
+output: pdf_document
+bibliography: reference.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library("pROC")
+```
+
+```{r, echo = FALSE}
+# load the data
+raw_data <- read.csv("/cloud/project/Video_Games_Sales_as_at_22_Dec_2016.csv")
+```
+# Introduction
+
+Playing game is always an attractive activity for young and old. Because of the enjoyment and positive emotion brought by the games, the love for the games includes both inner psychological motivation and the outer positive rewards. With the development of technology, video games can provide players with more vivid visual effects, better auditory effects and various of game machanics. As the types of games booming, the population of players is also surging. The recent survey has revealed that nearly 3.1 billion people around the world are video game players, which takes up about 40% of the world population. In this large market, producers are pursuing to write popular games and players with various of demand are seeking more interesting games. For the producer side, it is important to have an idea on which types of games are more welcomed by the consumers and the expect sales of certain games that you have designed. Therefore, in this paper, I am going to use statistical method to analyze the factors that might affect the video games sales and build up models that can predict certain types of games' sale.
+
+The data set used in this paper is from Kaggle. It includes data about over 16,000 games published from 1980 to 2020. For each observation, the information of platform, year of publish, genre, publisher, sales in different area in the world, worldwide sales, user scores and rating are shown in the data. In this data, I will mainly focus on the worldwide sales to see how these factors will affect the total sales of the video game around the world. 
+
+The paper will be followed a full analysis of data. In the Data section, the data will be carefully described and evaluated. The model built up based on the data will be shown in the Model section. Some discussions results of the model, as well as the limitation and next steps will be shown in the following.
+
+# Data
+
+# Model
+
+# Results
+
+# Discussion
+
+# References
+
+
+
