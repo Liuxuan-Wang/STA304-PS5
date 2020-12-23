@@ -1,0 +1,167 @@
+---
+title: "Action games and games with higher critic scores tend to have more sales"
+subtitle: "https://github.com/Liuxuan-Wang/STA304-PS5"
+author: "Liuxuan Wang"
+thanks: "https://github.com/Liuxuan-Wang/STA304-PS5"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: |
+  | Video game, as an entertainment full of excitement and positive emotion, has attracted nearly 40% of the world population to be video game players. Obtained video game sales data from Kaggle with over 16,000 video games, this paper conducts multiple linear regression models to see how factors such as number of years since publish, critics and players' evaluation and type of game affect the global video game sales, and get the result that action games and games with higher critic scores tend to have more global sales. From this study, video game producers can have a better sense on what kind of games tend to have a better sale and can predict a certain video game's sale in the future.
+  |
+  | **Keywords:** video games, global sales, multiple linear regression model
+output: pdf_document
+bibliography: reference.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(pROC)
+library(janitor)
+```
+
+```{r, echo = FALSE}
+# load the data
+raw_data <- read.csv("/cloud/project/Video_Games_Sales_as_at_22_Dec_2016.csv")
+```
+# Introduction
+
+Playing game is always an attractive activity for young and old. Because of the enjoyment and positive emotion brought by the games, the love for the games includes both inner psychological motivation and the outer positive rewards @pang_2019. With the development of technology, video games can provide players with more vivid visual effects, better auditory effects and various of game machanics. As the types of games booming, the population of players is also surging. The recent survey has revealed that nearly 3.1 billion people around the world are video game players, which takes up about 40% of the world population @price_ben. In this large market, producers are pursuing to write popular games and players with various of demand are seeking more interesting games. For the producer side, it is important to have an idea on which types of games are more welcomed by the consumers and the expect sales of certain games that you have designed. Therefore, in this paper, I am going to use R as programming tool @citeR and statistical method to analyze the factors that might affect the video games sales and build up models that can predict certain types of games' sale. The packages used are tidyverse @tidyverse, janitor @janitor and pROC @pROC
+
+The data set used in this paper is from Kaggle @kirubi_2016. It includes data about over 16,000 games published from 1980 to 2020. For each observation, the information of platform, year of publish, genre, publisher, sales in different area in the world, worldwide sales, and user scores are shown in the data. In this data, I will mainly focus on the worldwide sales to see how these factors will affect the total sales of the video game around the world. Overall, from the multiple linear regression we build, action games and games with higher critic scores tend to have more global sales.
+
+The paper will be followed a full analysis of data. In the Data section, the data will be carefully described and evaluated. The model built up based on the data will be shown in the Model section. Some discussions results of the model, as well as the limitation and next steps will be shown in the following.
+
+# Data
+
+This original data was obtained from vrchartz, with 16719 games released from 1980 to 2020. It includes the data about the games name, platform, year of release, publisher, sales in different areas, rating and user's and critic's score. The sales are in millions of unit. Critic's score are in 100 while users' score are in 10. The critic's score are from Metactrc's staff and user's scores are from Metacritic's subscriber
+
+
+### Data Features and Strengths
+
++ Data Completeless:
+
+With 16719 games of 12 different genres, the data set has collected almost all the games from 1980 to 2016. The variables included also cover most of the features that can be used to evaluate a game.
+
++ Broad Time span:
+
+It has recorded the video games across over thirty years, which can give data users' a view of video games' history using data.
+
+
+
+### Data Weakness
+
++ Too many NA values: 
+
+Since there are a lot of old games and some of details of games are unavailable, therefore there are many NA values in this data set.
+
++ The scores are from only one platform.
+
+Though Metacritic is one of the largest platform for evaluating games and films, however, the scores collected here are only face to subscribers and staffs on this platform while cannot reflect what the other people think. There can be sampling error happening here.
+
+
+### Data Description
+
+```{r, echo = FALSE}
+# Barplot showing number of games for different genres
+ggplot(data = raw_data, aes(x = Genre, fill = Genre)) + geom_bar()+ theme(axis.text.x = element_text(angle = -50))+labs(x = "Genre", y = "Number of games",
+        title ="Figure 1: Number of games for each genre")
+```
+
+From 1980 to 2020, in this data set, action genre has the largest number of games released, with over 3500. Puzzle genre has only around 500 games released in this time period, which is the least.
+
+```{r, echo = FALSE}
+freq_name <- cbind.data.frame(Name = raw_data$Name, Sales = raw_data$Global_Sales, Publisher = raw_data$Publisher, Year = raw_data$Year_of_Release, Player_score = raw_data$User_Score, Critic_score = raw_data$Critic_Score)
+freq_name <- head(freq_name[order(freq_name$Sales, decreasing = T),], 10)
+freq_name
+
+```
+
+The top 10 games with the most sales are mostly released before 2010. All of them are from Nintendo and released before 2010. From here, we can see that these games have been popular for many years. Except for Wii Play and some old games without critic score records, the other games have good evaluation from both players and critics.
+
+```{r, echo = FALSE}
+ggplot(data = raw_data, aes(x = User_Score, y = Global_Sales)) + geom_point()+labs(x = "User Score", y = "Global Sales",
+        title ="Figure 2: Scatter plot for global sales to user scores")
+```
+
+The scatter plot above has no obvious linear pattern between these two variables. It shows that the global sales of video games are not simply affected by the users' evaluation. There are also a lot of other factors.
+
+```{r, echo = FALSE}
+# Barplot showing number of games released in different years
+ggplot(data = raw_data, aes(x = Year_of_Release, fill = Year_of_Release)) + geom_bar()+ theme(axis.text.x = element_text(angle = -90))+labs(x = "Year of Release", y = "Number of games",
+        title ="Figure 3: Number of games released from 1980 to 2020")
+
+```
+
+```{r, echo = FALSE}
+# Frequency table from with decreasing ranking to show the number of games released in each year. #
+freq_year_table <- data.frame(table(raw_data$Year_of_Release))
+colnames(freq_year_table) <- c("Year", "Frequency")
+freq_year_table <- freq_year_table[order(freq_year_table$Frequency, decreasing = TRUE),]
+freq_year_table
+```
+From the graph and frequency table above, in this data set, 2002-2011 have the most number of games released being recorded. There are 269 games which have unavailable year of release. In 1980s, the video game industry has just started, which leads to less games released. For games after 2016, this data set has its limitation on recording. 
+
+
+
+
+
+
+# Model
+
+I firstly clean the raw data. In this paper, I will mainly focus on building model predicting the global sales using year of release, genre, critic score and user score as explanatory variables. After selecting these variables and excluding NA values, using simple random selection to randomly select 1000 samples from the cleaned data. And build up a multiple regression model to see how these factors affect the global sales. The model's summary is shown below.
+
+```{r, echo = FALSE}
+# Firstly clean the data, select year, genre, critic score and user score as explanatory variable to predict global sales. Delte the NA values#
+selected_data <- raw_data[raw_data$Year_of_Release != "N/A",c(3,4,10,11,13)]
+Player_Score <- as.numeric(selected_data$User_Score)
+selected_data <- cbind(selected_data[,-5],Player_Score)
+data_cleaned <- na.omit(selected_data)
+# Simple random select 1000 observations
+set.seed(1602)
+row_selected <- sample(1:nrow(data_cleaned), size = 1000)
+SRSdata <- data_cleaned[row_selected,]
+# Build up multiple linear regression
+model <- lm(Global_Sales~., data = SRSdata) 
+summary(model)
+```
+
+# Results
+
+From the summary of multiple linear regression above, most of genre variables' coefficient are not statistically significant. For year of release, the year of 1996 is the base year, and for genre, action is the base variable. The coefficients for year of release show that the global sales will be more when the time of release becomes longer. The coefficients for genre just align with the situation we observe from the data part, that action games tend to have more sales. Critic score and player's evaluation both have siginificant affect on the global sales. Critic score has statistically significant positive relationship with globals sales. Surprisingly, the relationship between player's score and global sales is negative. Commonly, we think that the game with higher player evaluation should have more sales. This can be the effect of sampling.
+
+
+
+# Discussion
+
+1) For some video games such as Mario and Pokemon, though they have been released for over 20 or 30 years, they are still populate and favorited by players from all over the world. Part of the reasons that why the coefficients for year of release are extremely close can be generated from these extremely popular old games which have larger sales growth than the other later games.
+
+2) The circumstance shown in the coefficients of player score and critic score can be reasonable. Since players can be attracted by the high scores and pay for the game. However, player's evaluations mostly come out after they buy it. Therefore, the relationship between player's evaluation and the games' sales can be negative.
+
+## Limitation
+
++ Sampling method
+
+The sampling method used here is simple random selection, which can have some biases on sampling. 
+
++ Other factors
+
+Except for the factors we used in this report, there are still other factors that can affect the sales. For example, for games on platforms that can expose to more players, the sales tend to be higher. Nintendo as large factory of video games starting in early years, tend to own more high sales games, as well.
+
+
+## Next steps
+
++ Use more advanced sampling method:
+
+Using stratified sampling method according to the platform or the genre of games can be a better choice with less biases than simple linear regression.
+
++ Find more complete data from different platforms
+
+Using data from different evaluation platforms can generate less bias on sampling error.
+
+
+
+# Reference
+
+
+
+
